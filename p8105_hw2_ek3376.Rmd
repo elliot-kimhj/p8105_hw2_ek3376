@@ -1,0 +1,83 @@
+---
+title: "Homework 2"
+author: "Elliot Kim"
+date: "2024-10-02"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r library}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(tidyr)
+```
+
+## Problem 1
+
+Import subway dataset and clean variables
+```{r}
+nyc_subway = read.csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv", na = c(".", "NA", "")) |> 
+  janitor::clean_names() |>
+  select(line:entry, vending, ada) |>
+  mutate(entry = ifelse(entry =="YES", TRUE, FALSE))
+```
+
+The dataset above is called nyc_subway, which contains the following variables about nyc subways: the lines, station names, station latitude/longitude, routes(1-11), entrance type, entry, vending, and ADA compliance. To clean this dataset, I first read the csv file and standardized the column names. I then selected the variables listed above using the select function. Finally, I modified the entry variable by converting it from a character to a logical variable using the ifelse function. This dataset has `r nrow(nyc_subway)` rows and `r ncol(nyc_subway)` columns. The data is tidy as each variable has a distinct column and each observation occupies a distinct row. 
+
+Dataset questions and answers
+```{r}
+distinct(nyc_subway, line, station_name) |>
+  nrow()
+```
+
+There are 465 distinct stations in this dataset.
+
+```{r}
+filter(nyc_subway, ada == TRUE) |>
+  distinct(line, station_name) |>
+  nrow()
+```
+
+84 stations are ADA compliant.
+
+```{r}
+filter(nyc_subway, vending == "NO", entry == "TRUE") |>
+  summarise(proportion = n()/nrow(nyc_subway))
+  
+```
+
+The proportion of station entrances/exits without vending allow entrances is 3.69%
+
+##reformat data
+```{r}
+nyc_subway2 = nyc_subway |>
+  mutate(across(route1:route11, as.character)) |>
+  pivot_longer(cols = route1:route11, names_to = "route_number", values_to = "route")
+
+nyc_subway2 |>
+  filter(route == "A") |>
+  distinct(line, station_name) |>
+  count()
+  
+nyc_subway2 |>
+  filter(route == "A", ada == TRUE) |>
+  distinct(line, station_name) |>
+  count()
+```
+
+There are 60 dustubct stations that serve the A train. Of the stations that serve the A train, 17 are ADA compliant. 
+
+## Problem 2
+```{r}
+trash_wheel = read_excel("./data/202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel")
+
+trash_wheel |>
+  janitor::clean_names() |>
+  select(dumpster:homes_powered) |>
+  drop_na(dumpster)
+```
+
